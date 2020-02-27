@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <script type="text/javascript" src="/socket.io/socket.io.js"></script>
+    <!-- <script src='https://cdn.jsdelivr.net/npm/p5'></script> -->
+    <script>
+        var socket = io.connect();
+
+        socket.on('connect', function () {
+            console.log("Connected");
+        });
+
+        var sendTranscript = function (transcript) {
+            socket.emit("sendTranscript", transcript);
+            console.log(transcript);
+        };
+    </script>
+    <title>Speech to Text</title>
+</head>
+<style>
+    * {
+        font-size: 50px;
+    }
+</style>
+
+<body>
+    <div id='visualizeTxt'></div>
+    <p id='score'></p>
+    <p id='comparative'></p>
+    <p id='words'></p>
+</body>
+<script>
+    //reference: https://codeburst.io/html5-speech-recognition-api-670846a50e92
+    //1. analyze speech to text
+    window.SpeechRecognition = window.webkitSpeechRecognition || window.SpeechRecognition;
+
+    if ('SpeechRecognition' in window) {
+        // speech recognition API supported
+        console.log("supported");
+    } else {
+        // speech recognition API not supported
+        console.log("nooooo");
+    }
+
+    //create a new speech recognition object.
+    const recognition = new window.SpeechRecognition();
+    const finalTranscript = "";
+    recognition.interimResults = true;
+    recognition.maxAlternatives = 15;
+    recognition.continuous = true;
+    recognition.lang = "en-US"
+
+    //ask user to allow the page to have access to the microphone
+    recognition.onresult = (event) => {
+        //detect single
+        // const speechToText = event.results[0][0].transcript;
+        // console.log(event);
+        console.log('1')
+        //detect multiple
+        let interimTranscript = '';
+        for (let i = event.resultIndex, len = event.results.length; i < len; i++) {
+            let transcript = event.results[i][0].transcript;
+            console.log(event.results[i].isFinal)
+            if (event.results[i].isFinal == true) {
+                finalTranscript += transcript;
+                console.log('final: ' + finalTranscript);;
+                sendTranscript(finalTranscript);
+            } else {
+                interimTranscript += transcript;
+                console.log('interim: ' + interimTranscript);
+                sendTranscript(interimTranscript);
+            }
+        }
+        console.log('2');
+        //put transcript in html
+        let visualizeTxt = document.getElementById('visualizeTxt');
+        console.log('3');
+        visualizeTxt.innerHTML = finalTranscript + '<i style="color:#ddd;">' + interimTranscript +
+            '</>';
+        console.log('4');
+    }
+    recognition.start();
+</script>
+
+</html>

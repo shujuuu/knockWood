@@ -1,0 +1,1 @@
+rsync -r . pi:/home/pi/code
