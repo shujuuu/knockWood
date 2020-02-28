@@ -1,9 +1,12 @@
 // HTTP Portion
-var http = require('http');
+var https = require('https');
 var fs = require('fs');
-var httpServer = http.createServer(requestHandler);
 var url = require('url');
-httpServer.listen(8080);
+
+var options = {
+    key: fs.readFileSync('my-key.pem'),
+    cert: fs.readFileSync('my-cert.pem')
+};
 
 function requestHandler(req, res) {
 
@@ -24,19 +27,24 @@ function requestHandler(req, res) {
     );
 }
 
+var httpServer = https.createServer(options, requestHandler);
+httpServer.listen(8080);
+
+console.log('sentiment analysis running on 8080');
+
 //sentiment analysis
 var Sentiment = require('sentiment');
 var sentiment = new Sentiment();
 
 //serial port
 var connected = false;
-// var SerialPort = require('serialport');
-// var serialPort = new SerialPort("/dev/cu.usbmodem1411", {
-//     baudRate: 9600
-// });
-// serialPort.on("open", function () {
-//     console.log("Connect to Arduio");
-// });
+var SerialPort = require('serialport');
+var serialPort = new SerialPort("/dev/cu.usbmodem1411", {
+    baudRate: 9600
+});
+serialPort.on("open", function () {
+    console.log("Connect to Arduio");
+});
 
 // WebSocket Portion
 var io = require('socket.io').listen(httpServer);
@@ -52,9 +60,11 @@ io.sockets.on('connection',
             var result = sentiment.analyze(data);
             console.log(result);
 
-            // if (connected) {
-            //     serialPort.write("to be sent to arduino");
-            // }
+            //if bad then send
+
+            if (connected) {
+                serialPort.write("to be sent to arduino");
+            }
         });
 
 
