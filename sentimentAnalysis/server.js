@@ -59,28 +59,20 @@ io.sockets.on('connection',
         socket.on('sendTranscript', function (data) {
             // console.log("Received: " + data);
             var result = sentiment.analyze(data);
+            let score = result.score;
             console.log(result.tokens); //all the words
             console.log(result.score); //total score
-            let H = "H";
-            //for local server only, send data
+
+            //option1: for local server only, send data
             if (result.score < "0") {
-                console.log('bad');
-                serialPort.on('badData', function (H) {
-                    socket.emit('badData', H);
-                    serialPort.write(H);
-                })
+                console.log('this is bad result');
+
+                // console.log('baud rate: ' + myPort.options.baudRate);
+                serialPort.write(score.toString());
+                
             }
 
-            //for local server only, send data
-            // if (connected) {
-            // serialPort.write("L");
-            // serialPort.write("Arduino is connected");
-            // }
-            // serialPort.on("data", function (data) {
-            //     socket.emit('serialdata', data);
-            //     console.log(data);
-            // });
-            //for node server by anthony
+            //option 2: for node server by anthony
             // socket.emit("result", result);
         });
 
