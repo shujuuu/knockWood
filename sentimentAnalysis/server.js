@@ -1,12 +1,14 @@
 // HTTP Portion
-var https = require('https');
+var http = require('http');
 var fs = require('fs');
+var httpServer = http.createServer(requestHandler);
 var url = require('url');
+httpServer.listen(8080);
 
-var options = {
-    key: fs.readFileSync('my-key.pem'),
-    cert: fs.readFileSync('my-cert.pem')
-};
+// var options = {
+//     key: fs.readFileSync('my-key.pem'),
+//     cert: fs.readFileSync('my-cert.pem')
+// };
 
 function requestHandler(req, res) {
 
@@ -26,10 +28,6 @@ function requestHandler(req, res) {
         }
     );
 }
-
-var httpServer = https.createServer(options, requestHandler);
-httpServer.listen(8080);
-
 console.log('sentiment analysis running on 8080');
 
 //sentiment analysis
@@ -39,13 +37,17 @@ var sentiment = new Sentiment();
 //serial port
 var connected = false;
 var SerialPort = require('serialport');
-var serialPort = new SerialPort("/dev/cu.usbmodem1411", {
+var serialPort = new SerialPort("/dev/cu.usbmodem14101", {
     baudRate: 9600
 });
+// var Readline = SerialPort.parsers.Readline;
+// var parser = new Readline();
+
 serialPort.on("open", function () {
-    console.log("Connect to Arduio");
+    console.log("serial port open & connected");
 });
 
+// let webSocketServer = require('ws').Server;
 // WebSocket Portion
 var io = require('socket.io').listen(httpServer);
 
@@ -55,16 +57,31 @@ io.sockets.on('connection',
         console.log("We have a new client: " + socket.id);
 
         socket.on('sendTranscript', function (data) {
-            console.log("Received: " + data);
-
+            // console.log("Received: " + data);
             var result = sentiment.analyze(data);
-            console.log(result);
-
-            //if bad then send
-
-            if (connected) {
-                serialPort.write("to be sent to arduino");
+            console.log(result.tokens); //all the words
+            console.log(result.score); //total score
+            let H = "H";
+            //for local server only, send data
+            if (result.score < "0") {
+                console.log('bad');
+                serialPort.on('badData', function (H) {
+                    socket.emit('badData', H);
+                    serialPort.write(H);
+                })
             }
+
+            //for local server only, send data
+            // if (connected) {
+            // serialPort.write("L");
+            // serialPort.write("Arduino is connected");
+            // }
+            // serialPort.on("data", function (data) {
+            //     socket.emit('serialdata', data);
+            //     console.log(data);
+            // });
+            //for node server by anthony
+            // socket.emit("result", result);
         });
 
 
