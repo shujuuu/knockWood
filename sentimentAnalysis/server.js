@@ -40,8 +40,8 @@ var SerialPort = require('serialport');
 var serialPort = new SerialPort("/dev/cu.usbmodem14101", {
     baudRate: 9600
 });
-// var Readline = SerialPort.parsers.Readline;
-// var parser = new Readline();
+var Readline = SerialPort.parsers.Readline;
+var parser = new Readline();
 
 serialPort.on("open", function () {
     console.log("serial port open & connected");
@@ -50,6 +50,8 @@ serialPort.on("open", function () {
 // let webSocketServer = require('ws').Server;
 // WebSocket Portion
 var io = require('socket.io').listen(httpServer);
+// var five = require("johnny-five");
+// var board = new five.Board();
 
 io.sockets.on('connection',
     // We are given a websocket object in our function
@@ -65,11 +67,27 @@ io.sockets.on('connection',
 
             //option1: for local server only, send data
             if (result.score < "0") {
-                console.log('this is bad result');
+                console.log('bad result');
+                // serialPort.write(score.toString());
+                serialPort.write(52);
 
-                // console.log('baud rate: ' + myPort.options.baudRate);
-                serialPort.write(score.toString());
-                
+                //johnny five
+                // board.on("ready", function () {
+                //     //LED
+                //     // Create a standard `led` component instance
+                //     var led = new five.Led(13);
+                //     // "blink" the led in 500ms
+                //     // on-off phase periods
+                //     led.blink(1000);
+
+                //     //MOTOR
+                //     var servo = new five.Servo(10);
+                //     servo.to(90);
+                //     servo.to(90, 500);
+                //     servo.to(90, 500, 10);
+                //     servo.sweep();
+                // });
+
             }
 
             //option 2: for node server by anthony
